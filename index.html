@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>On-Time | Certification Transactions Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for Admin Analytics Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            800: '#1a2b4c',
+                            900: '#0f213d',
+                            950: '#0a1428',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f6f9; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- MAIN WRAPPER WITH RIGHT SIDEBAR -->
+    <div class="flex flex-col md:flex-row-reverse min-h-screen w-full">
+
+        <!-- RIGHT SIDEBAR -->
+        <aside class="w-full md:w-72 bg-[#0f213d] text-white flex-shrink-0 flex flex-col justify-between p-5 min-h-screen border-l border-slate-800">
+            <div>
+                <!-- Brand Header -->
+                <div class="flex items-start gap-2.5 mb-6 pb-4 border-b border-slate-700/60">
+                    <div class="text-white mt-1">
+                        <i class="fa-solid fa-gem text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight text-white leading-none">On-time</h1>
+                        <p class="text-[11px] text-slate-300 mt-1 leading-snug font-light">
+                            Certification Transactions Management — Single Branch
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Role Switcher Control in Sidebar -->
+                <div class="mb-5 p-3 bg-[#142845] rounded border border-slate-700/60">
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Active Role Mode</label>
+                    <select id="roleSelect" onchange="switchRole(this.value)" class="w-full bg-[#1a3459] text-white text-xs p-2 rounded border border-slate-600 focus:outline-none cursor-pointer">
+                        <option value="Receptionist">Receptionist</option>
+                        <option value="Application Officer">Application Officer</option>
+                        <option value="Administrator">Administrator (Super User)</option>
+                        <option value="Auditor Checker">Auditor / Checker (Read-Only)</option>
+                    </select>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="space-y-1 text-xs font-medium" id="sidebar-nav">
+                    <a href="javascript:void(0)" onclick="switchTab('control-panel')" data-tab="control-panel" class="nav-item hide-for-auditor flex items-center gap-3 px-3 py-2.5 rounded-md bg-[#1a3459] text-white shadow-sm transition">
+                        <i class="fa-solid fa-table-cells-large w-5 text-center text-slate-200"></i>
+                        <span>Control Panel</span>
+                    </a>
+
+                    <a href="javascript:void(0)" onclick="switchTab('receive-order')" data-tab="receive-order" class="nav-item role-reception hide-for-auditor flex items-center gap-3 px-3 py-2.5 rounded-md text-slate-200 hover:bg-[#1a3459]/60 hover:text-white transition">
+                        <i class="fa-solid fa-file-circle-plus w-5 text-center"></i>
+                        <span>Receive an Order</span>
+                    </a>
+
+                    <a href="javascript:void(0)" onclick="switchTab('serving-list')" data-tab="serving-list" class="nav-item role-officer hide-for-auditor flex items-center gap-3 px-3 py-2.5 rounded-md text-slate-200 hover:bg-[#1a3459]/60 hover:text-white transition">
+                        <i class="fa-solid fa-user-gear w-5 text-center"></i>
+                        <span class="flex-1 flex items-center justify-between">
+                            Serving Queue
+                            <span id="badge-serving" class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
+                        </span>
+                    </a>
+
+                    <a href="javascript:void(0)" onclick="switchTab('my-assigned-orders')" data-tab="my-assigned-orders" class="nav-item role-officer-only hide-for-auditor flex items-center gap-3 px-3 py-2.5 rounded-md text-slate-200 hover:bg-[#1a3459]/60 hover:text-white transition">
+                        <i class="fa-solid fa-user-check w-5 text-center text-cyan-400"></i>
+                        <span class="flex-1 flex items-center justify-between">
+                            My Assigned Orders
+                            <span id="badge-my-assigned" class="bg-cyan-600 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
+                        </span>
+                    </a>
+
+                    <a href="javascript:void(0)" onclick="switchTab('certification-results')" data-tab="certification-results" class="nav-item hide-for-auditor flex items-center gap-3 px-3 py-2.5 rounded-md text-slate-200 hover:bg-[#1a3459]/60 hover:text-white transition">
+                        <i class="fa-solid fa-award w-5 text-center text-emerald-400"></i>
+                        <span class="flex-1 flex items-center justify-between">
+                            Certification Results
+                            <span id="badge-cert" class="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
+                        </span>
+                    </a>
+
+                    <a href="javascript:void(0)" onclick="switchTab('customer-status')" data-tab="customer-status" class="nav-item role-reception hide-for-auditor flex items-center gap-3 px-3 py-2.5 rounded-md text-slate-200 hover:bg-[#1a3459]/60 hover:text-white transition">
+                        <i class="fa-solid fa-bullhorn w-5 text-center text-sky-400"></i>
+                        <span>Customer Status Follow-up</span>
+                    </a>
+
+                    <a href="javascript:void(0)" onclick="switchTab('refund-workflow')" data-tab="refund-workflow" class="nav-item hide-for-auditor flex items-center gap-3 px-3 py-2.5 rounded-md text-slate-200 hover:bg-[#1a3459]/60 hover:text-white transition">
+                        <i class="fa-solid fa-rotate-left w-5 text-center text-red-400"></i>
+                        <span class="flex-1 flex items-center justify-between">
+                            Refund Workflow
+                            <span id="badge-refunds" class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full hidden">0</span>
+                        </span>
+                    </a>
+
+                    <a href="javascript:void(0)" onclick="switchTab('all-transactions')" data-tab="all-transactions" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-slate-200 hover:bg-[#1a3459]/60 hover:text-white transition">
+                        <i class="fa-solid fa-list-check w-5 text-center"></i>
+                        <span>All Transactions</span>
+                    </a>
+
+                    <a href="javascript:void(0)" id="nav-analytics-link" onclick="switchTab('admin-analytics')" data-tab="admin-analytics" class="nav-item role-admin hide-for-auditor flex items-center gap-3 px-3 py-2.5 rounded-md text-slate-200 hover:bg-[#1a3459]/60 hover:text-white transition">
+                        <i class="fa-solid fa-chart-pie w-5 text-center text-purple-400"></i>
+                        <span>Analytics & Charts</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Footer Note -->
+            <div class="mt-8 pt-4">
+                <div class="p-3 bg-[#142845] rounded-md border border-slate-700/50 text-[11px] text-slate-300 leading-relaxed flex items-start gap-2">
+                    <i class="fa-solid fa-circle-info text-blue-400 mt-0.5"></i>
+                    <div>Role-based workflow for Receptionist, Application Officer, Administrator, and Auditor / Checker.</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 bg-[#f4f6f9] p-4 md:p-6 lg:p-8 overflow-y-auto">
+
+            <!-- Global Header Bar -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-200">
+                <!-- Left Header Controls -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <button id="headerNewOrderBtn" onclick="openNewOrderModal()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded shadow-sm flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-plus text-xs"></i> New Order
+                    </button>
+
+                    <span id="roleBadge" class="bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-shield"></i> Receptionist Mode
+                    </span>
+
+                    <button onclick="resetDemoData()" title="Reset Sample Database" class="text-xs text-slate-500 hover:text-red-600 px-2.5 py-1.5 border border-slate-300 rounded bg-white hover:bg-slate-50 transition">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Reset Data
+                    </button>
+                </div>
+
+                <!-- Right View Title -->
+                <div class="lg:text-right">
+                    <h2 id="view-title" class="text-xl md:text-2xl font-bold text-slate-900 leading-tight">Control Panel</h2>
+                    <p id="view-desc" class="text-xs text-slate-500 font-normal">Record and follow up on customer documents until result and delivery or retrieval</p>
+                </div>
+            </div>
+
+            <!-- TAB 1: CONTROL PANEL -->
+            <div id="tab-control-panel" class="tab-content active space-y-6">
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-lg border border-slate-200 p-4 shadow-sm hover:border-red-300 transition cursor-pointer" onclick="filterAndNavigate('Rejected')">
+                        <div class="text-xs font-medium text-slate-600 flex justify-between">
+                            <span>Rejected Cases</span>
+                            <i class="fa-solid fa-circle-xmark text-red-500"></i>
+                        </div>
+                        <div class="text-3xl font-extrabold text-slate-900 my-2" id="kpi-rejected">0</div>
+                        <div class="text-[11px] text-slate-400">Needs resubmission or refund tracking</div>
+                    </div>
+
+                    <div class="bg-white rounded-lg border border-slate-200 p-4 shadow-sm hover:border-amber-300 transition cursor-pointer" onclick="filterAndNavigate('Under Process')">
+                        <div class="text-xs font-medium text-slate-600 flex justify-between">
+                            <span>Under Process</span>
+                            <i class="fa-solid fa-hourglass-half text-amber-500"></i>
+                        </div>
+                        <div class="text-3xl font-extrabold text-slate-900 my-2" id="kpi-process">0</div>
+                        <div class="text-[11px] text-slate-400">Submitted and awaiting result</div>
+                    </div>
+
+                    <div class="bg-white rounded-lg border border-slate-200 p-4 shadow-sm hover:border-blue-300 transition cursor-pointer" onclick="filterAndNavigate('Waiting')">
+                        <div class="text-xs font-medium text-slate-600 flex justify-between">
+                            <span>Waiting Officer</span>
+                            <i class="fa-solid fa-user-clock text-blue-500"></i>
+                        </div>
+                        <div class="text-3xl font-extrabold text-slate-900 my-2" id="kpi-waiting">0</div>
+                        <div class="text-[11px] text-slate-400">Applications pending receipt by officer</div>
+                    </div>
+
+                    <div class="bg-white rounded-lg border border-slate-200 p-4 shadow-sm hover:border-indigo-300 transition cursor-pointer" onclick="switchTab('all-transactions')">
+                        <div class="text-xs font-medium text-slate-600 flex justify-between">
+                            <span>Total Transactions</span>
+                            <i class="fa-solid fa-folder-open text-indigo-500"></i>
+                        </div>
+                        <div class="text-3xl font-extrabold text-slate-900 my-2" id="kpi-total">0</div>
+                        <div class="text-[11px] text-slate-400">Registered MOFA orders in system</div>
+                    </div>
+                </div>
+
+                <!-- Distribution & Latest Followups -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-5 bg-white rounded-lg border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-sm font-bold text-slate-800">Distribution of cases</h3>
+                                <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-500">Real-time</span>
+                            </div>
+                            
+                            <div class="space-y-3 text-xs text-slate-700">
+                                <div class="flex justify-between items-center pb-2 border-b border-slate-100 cursor-pointer" onclick="filterAndNavigate('Waiting')">
+                                    <span class="font-bold text-slate-900 w-8" id="dist-waiting">0</span>
+                                    <span class="text-slate-600 font-medium flex-1 text-right">Waiting to be submitted</span>
+                                </div>
+                                <div class="flex justify-between items-center pb-2 border-b border-slate-100 cursor-pointer" onclick="filterAndNavigate('Received')">
+                                    <span class="font-bold text-slate-900 w-8" id="dist-received">0</span>
+                                    <span class="text-slate-600 font-medium flex-1 text-right">Received by application officer</span>
+                                </div>
+                                <div class="flex justify-between items-center pb-2 border-b border-slate-100 cursor-pointer" onclick="filterAndNavigate('Under Process')">
+                                    <span class="font-bold text-slate-900 w-8" id="dist-process">0</span>
+                                    <span class="text-slate-600 font-medium flex-1 text-right">Under Certification / Process</span>
+                                </div>
+                                <div class="flex justify-between items-center pb-2 border-b border-slate-100 cursor-pointer" onclick="filterAndNavigate('Completed')">
+                                    <span class="font-bold text-slate-900 w-8" id="dist-completed">0</span>
+                                    <span class="text-slate-600 font-medium flex-1 text-right">Completed / Certified</span>
+                                </div>
+                                <div class="flex justify-between items-center pb-2 border-b border-slate-100 cursor-pointer" onclick="filterAndNavigate('Rejected')">
+                                    <span class="font-bold text-slate-900 w-8" id="dist-rejected">0</span>
+                                    <span class="text-slate-600 font-medium flex-1 text-right">Rejected</span>
+                                </div>
+                                <div class="flex justify-between items-center pb-2 border-b border-slate-100 cursor-pointer" onclick="filterAndNavigate('Delivered')">
+                                    <span class="font-bold text-slate-900 w-8" id="dist-delivered">0</span>
+                                    <span class="text-slate-600 font-medium flex-1 text-right">Delivered to Customer</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-7 bg-white rounded-lg border border-slate-200 p-5 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-sm font-bold text-slate-800">Latest Transactions to Follow Up</h3>
+                            <button onclick="switchTab('all-transactions')" class="text-xs text-blue-600 hover:underline">View All</button>
+                        </div>
+                        <div id="followup-container" class="flex-1 overflow-x-auto">
+                            <!-- JS Populated -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: RECEIVE AN ORDER -->
+            <div id="tab-receive-order" class="tab-content space-y-6">
+                <div class="bg-white rounded-lg border border-slate-200 p-6 shadow-sm max-w-3xl mx-auto">
+                    <div class="flex items-center gap-3 pb-4 mb-5 border-b border-slate-200">
+                        <div class="p-2.5 bg-blue-100 text-blue-700 rounded-md">
+                            <i class="fa-solid fa-file-signature text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">New Order & Customer Intake</h3>
+                            <p class="text-xs text-slate-500">Record Quotation #, Receipt #, customer details, document type (Normal/Commercial), and file attachments.</p>
+                        </div>
+                    </div>
+
+                    <form id="newOrderForm" onsubmit="handleNewOrderSubmit(event)" class="space-y-4 text-xs">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Customer Full Name *</label>
+                                <input type="text" id="custName" required placeholder="e.g. Abdullah Al Qasimi" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Phone Number *</label>
+                                <input type="tel" id="custPhone" required placeholder="+971 50 123 4567" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Quotation Number *</label>
+                                <input type="text" id="quotationNo" required placeholder="QTN-2026-500" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Receipt Number *</label>
+                                <input type="text" id="receiptNo" required placeholder="REC-2026-900" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Document Service Category *</label>
+                                <select id="docType" required class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <option value="Normal">Normal</option>
+                                    <option value="Commercial">Commercial</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Fees Paid (AED) *</label>
+                                <input type="number" id="feeAmount" required value="270" min="0" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Customer Document Copy (Optional)</label>
+                                <input type="file" id="custDocFile" class="w-full p-1 border border-slate-300 rounded text-slate-600">
+                            </div>
+
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Receipt Copy Attachment *</label>
+                                <input type="file" id="receiptFile" class="w-full p-1 border border-slate-300 rounded text-slate-600">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Receptionist Notes</label>
+                            <textarea id="receptionNotes" rows="2" placeholder="Special requirements..." class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                        </div>
+
+                        <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                            <button type="reset" class="px-4 py-2 bg-slate-100 text-slate-600 rounded hover:bg-slate-200">Reset</button>
+                            <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded shadow-sm">
+                                <i class="fa-solid fa-plus mr-1"></i> Submit Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TAB 3: SERVING QUEUE -->
+            <div id="tab-serving-list" class="tab-content space-y-4">
+                <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Serving / Waiting Queue</h3>
+                            <p class="text-xs text-slate-500">Application Officers claim orders or Administrators assign them to specific Officers.</p>
+                        </div>
+                    </div>
+
+                    <div id="serving-queue-table-container" class="overflow-x-auto">
+                        <!-- JS Rendered -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3B: MY ASSIGNED ORDERS (Officer specific) -->
+            <div id="tab-my-assigned-orders" class="tab-content space-y-4">
+                <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-cyan-900"><i class="fa-solid fa-user-check mr-2"></i>My Assigned Orders</h3>
+                            <p class="text-xs text-slate-500">View and manage only the MOFA orders assigned specifically to your officer handle.</p>
+                        </div>
+                    </div>
+
+                    <div id="my-assigned-table-container" class="overflow-x-auto">
+                        <!-- JS Rendered -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: CERTIFICATION RESULTS -->
+            <div id="tab-certification-results" class="tab-content space-y-4">
+                <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Certification Results & Attested Document Upload</h3>
+                            <p class="text-xs text-slate-500">Finalize processing: Complete & upload attested version or reject with refund/resubmission path.</p>
+                        </div>
+                    </div>
+
+                    <div id="cert-results-table-container" class="overflow-x-auto">
+                        <!-- JS Rendered -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: CUSTOMER STATUS FOLLOW-UP -->
+            <div id="tab-customer-status" class="tab-content space-y-4">
+                <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Post-Result Customer Status Tracking</h3>
+                            <p class="text-xs text-slate-500">Update customer contact status (Informed/Not Informed) and collection status (Received/Handed Over).</p>
+                        </div>
+                    </div>
+
+                    <div id="customer-status-table-container" class="overflow-x-auto">
+                        <!-- JS Rendered -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: REFUND WORKFLOW TRACKER -->
+            <div id="tab-refund-workflow" class="tab-content space-y-4">
+                <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">5-Stage Financial Qashio Refund Workflow Tracker</h3>
+                            <p class="text-xs text-slate-500">Advance refund requests across approval levels and payment dispatch methods.</p>
+                        </div>
+                        <button id="initiateRefundBtn" onclick="openRefundModal()" class="text-xs bg-red-600 hover:bg-red-700 text-white font-semibold px-3 py-2 rounded shadow-sm">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Initiate Refund Request
+                        </button>
+                    </div>
+
+                    <!-- Workflow Stage Pipeline Pills -->
+                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-2 mb-4 text-[11px] font-semibold text-center">
+                        <div class="p-2 bg-amber-50 text-amber-800 rounded border border-amber-200">1. Waiting 3rd Party</div>
+                        <div class="p-2 bg-blue-50 text-blue-800 rounded border border-blue-200">2. Mgmt Approval L1</div>
+                        <div class="p-2 bg-purple-50 text-purple-800 rounded border border-purple-200">3. Finance Approval L2</div>
+                        <div class="p-2 bg-emerald-50 text-emerald-800 rounded border border-emerald-200">4. Approved Not Collected</div>
+                        <div class="p-2 bg-slate-800 text-white rounded border border-slate-900">5. Sent Through Card</div>
+                    </div>
+
+                    <div id="refund-workflow-table-container" class="overflow-x-auto">
+                        <!-- JS Rendered -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: ALL TRANSACTIONS (Auditor view available here) -->
+            <div id="tab-all-transactions" class="tab-content space-y-4">
+                <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-3 mb-4">
+                        <div class="relative w-full md:w-80">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                            <input type="text" id="searchInput" oninput="renderAllTransactions()" placeholder="Search MOFA ID, customer name, phone, receipt..." class="w-full text-xs pl-8 pr-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+
+                        <div class="flex items-center gap-2 w-full md:w-auto">
+                            <select id="statusFilter" onchange="renderAllTransactions()" class="text-xs border border-slate-300 rounded px-3 py-2 bg-white text-slate-700 focus:outline-none">
+                                <option value="ALL">All Statuses</option>
+                                <option value="Waiting">Waiting to be submitted</option>
+                                <option value="Received">Received by Application Officer</option>
+                                <option value="Under Process">Under Process / Certification</option>
+                                <option value="Completed">Completed / Certified</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Delivered">Delivered to Customer</option>
+                            </select>
+                            <button onclick="clearFilters()" class="text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-2 rounded">Clear</button>
+                        </div>
+                    </div>
+
+                    <div id="all-transactions-table-container" class="overflow-x-auto">
+                        <!-- JS Rendered -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 8: ADMIN ANALYTICS & CHARTS -->
+            <div id="tab-admin-analytics" class="tab-content space-y-6">
+                <div class="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+                    <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-200">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Executive Data Visualizations & Analytics</h3>
+                            <p class="text-xs text-slate-500">Live graphical analytics based on operational transactions database.</p>
+                        </div>
+                        <span class="text-xs bg-purple-100 text-purple-800 border border-purple-200 px-3 py-1 rounded font-bold">
+                            Administrator Panel
+                        </span>
+                    </div>
+
+                    <!-- Chart Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                            <h4 class="text-xs font-bold text-slate-700 mb-3 text-center">Distribution of Cases by Status</h4>
+                            <div class="h-64"><canvas id="chartDistribution"></canvas></div>
+                        </div>
+
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                            <h4 class="text-xs font-bold text-slate-700 mb-3 text-center">Approval vs Rejection Rate</h4>
+                            <div class="h-64"><canvas id="chartApproval"></canvas></div>
+                        </div>
+
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                            <h4 class="text-xs font-bold text-slate-700 mb-3 text-center">Refund Stages Breakdown</h4>
+                            <div class="h-64"><canvas id="chartRefunds"></canvas></div>
+                        </div>
+
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                            <h4 class="text-xs font-bold text-slate-700 mb-3 text-center">Revenue Collection by Document Type (AED)</h4>
+                            <div class="h-64"><canvas id="chartRevenue"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL 1: NEW ORDER DIALOG -->
+    <div id="newOrderModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl border border-slate-200 relative">
+            <button onclick="closeModal('newOrderModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus text-blue-600"></i> Register New MOFA Order
+            </h3>
+            
+            <form onsubmit="handleNewOrderSubmitModal(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Customer Full Name *</label>
+                    <input type="text" id="mCustName" required placeholder="e.g. Mariam Al Mansoori" class="w-full p-2 border border-slate-300 rounded">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Phone Number *</label>
+                        <input type="tel" id="mCustPhone" required placeholder="+971 50 888 7766" class="w-full p-2 border border-slate-300 rounded">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Quotation Number *</label>
+                        <input type="text" id="mQuotationNo" required placeholder="QTN-2026-501" class="w-full p-2 border border-slate-300 rounded">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Document Category *</label>
+                        <select id="mDocType" required class="w-full p-2 border border-slate-300 rounded">
+                            <option value="Normal">Normal</option>
+                            <option value="Commercial">Commercial</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Fee Paid (AED) *</label>
+                        <input type="number" id="mFeeAmount" value="270" required class="w-full p-2 border border-slate-300 rounded">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Receipt Reference Number *</label>
+                    <input type="text" id="mReceiptNo" required placeholder="REC-2026-991" class="w-full p-2 border border-slate-300 rounded">
+                </div>
+
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('newOrderModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 bg-blue-600 text-white rounded font-medium hover:bg-blue-700">Save & Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: DYNAMIC ACTION & ADMIN EDIT MODAL -->
+    <div id="actionModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full p-6 shadow-xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('actionModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div id="modal-action-content">
+                <!-- JS Rendered -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: REFUND INITIATION MODAL -->
+    <div id="refundModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-lg max-w-lg w-full p-6 shadow-xl border border-slate-200 relative">
+            <button onclick="closeModal('refundModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-rotate-left text-red-600"></i> Initiate Qashio Refund Workflow
+            </h3>
+            
+            <form onsubmit="handleRefundSubmit(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Search & Select Transaction (Rejected or Waiting only) *</label>
+                    <select id="refundTransId" required class="w-full p-2 border border-slate-300 rounded font-medium" onchange="autoFillRefund(this.value)">
+                        <option value="">Select Transaction...</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Invoice Total Amount (AED)</label>
+                        <input type="number" id="refundInvoiceTotal" readonly class="w-full p-2 border border-slate-200 bg-slate-50 rounded font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Amount to be Refunded (AED) *</label>
+                        <input type="number" id="refundAmount" required class="w-full p-2 border border-slate-300 rounded font-bold text-red-600">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Qashio Refund Reference Number *</label>
+                    <input type="text" id="qashioRefNo" required placeholder="QSH-REF-2026-9081" class="w-full p-2 border border-slate-300 rounded font-mono">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Reason for Refund *</label>
+                    <textarea id="refundReason" required rows="2" placeholder="e.g. Government authority rejection, fee return requested." class="w-full p-2 border border-slate-300 rounded"></textarea>
+                </div>
+
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('refundModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 bg-red-600 text-white rounded font-medium hover:bg-red-700">Start Qashio Refund</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- APPLICATION LOGIC & STATE MANAGEMENT -->
+    <script>
+        // List of Application Officers for Admin Assignment
+        const OFFICERS_LIST = [
+            "Tariq Al Hammadi",
+            "Fatima Noor",
+            "Omar Al Seyabi",
+            "Hessa Al Qassimi"
+        ];
+
+        // Initial Demo Seed Data (Updated IDs with MOFA- prefix)
+        const INITIAL_TRANSACTIONS = [
+            {
+                id: "MOFA-2001",
+                customerName: "Sultan Mohammed",
+                phone: "+971 50 111 2233",
+                quotationNo: "QTN-2026-101",
+                docType: "Normal",
+                fee: 400,
+                receiptNo: "REC-2026-101",
+                docCopyUploaded: false,
+                receiptCopyUploaded: true,
+                status: "Waiting",
+                officer: "",
+                appNumber: "",
+                appDate: "",
+                rejectionReason: "",
+                attestedDocCopy: "",
+                customerInformed: false,
+                customerContactMethod: "Pending",
+                customerReceived: false,
+                rejectionPath: "",
+                dateCreated: "2026-10-23 09:15",
+                history: [{ status: "Waiting", date: "2026-10-23 09:15", by: "Receptionist" }]
+            },
+            {
+                id: "MOFA-2002",
+                customerName: "Apex Global Trading",
+                phone: "+971 4 888 9900",
+                quotationNo: "QTN-2026-102",
+                docType: "Commercial",
+                fee: 650,
+                receiptNo: "REC-2026-102",
+                docCopyUploaded: true,
+                receiptCopyUploaded: true,
+                status: "Received",
+                officer: "Tariq Al Hammadi",
+                appNumber: "",
+                appDate: "",
+                rejectionReason: "",
+                attestedDocCopy: "",
+                customerInformed: false,
+                customerContactMethod: "Pending",
+                customerReceived: false,
+                rejectionPath: "",
+                dateCreated: "2026-10-22 14:00",
+                history: [
+                    { status: "Waiting", date: "2026-10-22 14:00", by: "Receptionist" },
+                    { status: "Received", date: "2026-10-22 15:30", by: "Application Officer (Tariq Al Hammadi)" }
+                ]
+            },
+            {
+                id: "MOFA-2003",
+                customerName: "Dr. Elena Rostova",
+                phone: "+971 52 333 4455",
+                quotationNo: "QTN-2026-103",
+                docType: "Normal",
+                fee: 350,
+                receiptNo: "REC-2026-103",
+                docCopyUploaded: true,
+                receiptCopyUploaded: true,
+                status: "Under Process",
+                officer: "Fatima Noor",
+                appNumber: "MOE-99012-2026",
+                appDate: "2026-10-22",
+                rejectionReason: "",
+                attestedDocCopy: "",
+                customerInformed: false,
+                customerContactMethod: "Pending",
+                customerReceived: false,
+                rejectionPath: "",
+                dateCreated: "2026-10-21 11:20",
+                history: [
+                    { status: "Waiting", date: "2026-10-21 11:20", by: "Receptionist" },
+                    { status: "Received", date: "2026-10-21 12:00", by: "Application Officer (Fatima Noor)" },
+                    { status: "Under Process", date: "2026-10-22 09:00", by: "Application Officer (Fatima Noor)" }
+                ]
+            },
+            {
+                id: "MOFA-2004",
+                customerName: "Rashid Salem",
+                phone: "+971 55 666 7788",
+                quotationNo: "QTN-2026-104",
+                docType: "Commercial",
+                fee: 500,
+                receiptNo: "REC-2026-104",
+                docCopyUploaded: true,
+                receiptCopyUploaded: true,
+                status: "Completed",
+                officer: "Tariq Al Hammadi",
+                appNumber: "MOJ-88123-2026",
+                appDate: "2026-10-20",
+                rejectionReason: "",
+                attestedDocCopy: "ATTESTED_MOFA_2004.pdf",
+                customerInformed: true,
+                customerContactMethod: "SMS Sent",
+                customerReceived: true,
+                rejectionPath: "",
+                dateCreated: "2026-10-20 10:00",
+                history: [
+                    { status: "Waiting", date: "2026-10-20 10:00", by: "Receptionist" },
+                    { status: "Received", date: "2026-10-20 10:30", by: "Application Officer" },
+                    { status: "Under Process", date: "2026-10-20 11:00", by: "Application Officer" },
+                    { status: "Completed", date: "2026-10-21 14:00", by: "Application Officer" }
+                ]
+            },
+            {
+                id: "MOFA-2005",
+                customerName: "Khaled Al Hashmi",
+                phone: "+971 50 999 0011",
+                quotationNo: "QTN-2026-105",
+                docType: "Normal",
+                fee: 450,
+                receiptNo: "REC-2026-105",
+                docCopyUploaded: true,
+                receiptCopyUploaded: true,
+                status: "Rejected",
+                officer: "Fatima Noor",
+                appNumber: "MOJ-77110-2026",
+                appDate: "2026-10-19",
+                rejectionReason: "Missing notary seal on page 3.",
+                attestedDocCopy: "",
+                customerInformed: true,
+                customerContactMethod: "Call Made",
+                customerReceived: false,
+                rejectionPath: "Refund",
+                dateCreated: "2026-10-19 09:00",
+                history: [
+                    { status: "Waiting", date: "2026-10-19 09:00", by: "Receptionist" },
+                    { status: "Received", date: "2026-10-19 09:30", by: "Application Officer" },
+                    { status: "Rejected", date: "2026-10-20 10:00", by: "Application Officer" }
+                ]
+            }
+        ];
+
+        const INITIAL_REFUNDS = [
+            {
+                id: "REF-701",
+                transId: "MOFA-2005",
+                customerName: "Khaled Al Hashmi",
+                invoiceTotal: 450,
+                amount: 450,
+                qashioRef: "QSH-REF-2026-1001",
+                reason: "Rejection by Ministry - missing notary seal",
+                stage: "At management approval (level 1)",
+                dateInitiated: "2026-10-20 11:00"
+            }
+        ];
+
+        // Global State Variables
+        let transactions = [];
+        let refunds = [];
+        let currentRole = "Receptionist";
+        let activeTab = "control-panel";
+        let currentOfficerName = "Tariq Al Hammadi"; // Simulated active officer handle
+        let chartsInstance = {};
+
+        // Window Init
+        window.onload = function() {
+            loadState();
+            switchTab('control-panel');
+        };
+
+        function loadState() {
+            const savedTrx = localStorage.getItem('ontime_trx_mofa_v1');
+            const savedRef = localStorage.getItem('ontime_ref_mofa_v1');
+
+            transactions = savedTrx ? JSON.parse(savedTrx) : [...INITIAL_TRANSACTIONS];
+            refunds = savedRef ? JSON.parse(savedRef) : [...INITIAL_REFUNDS];
+
+            saveStateToStorage();
+        }
+
+        function saveStateToStorage() {
+            localStorage.setItem('ontime_trx_mofa_v1', JSON.stringify(transactions));
+            localStorage.setItem('ontime_ref_mofa_v1', JSON.stringify(refunds));
+            renderDashboard();
+            updateBadges();
+        }
+
+        function resetDemoData() {
+            if (confirm("Reset application data to initial demo state?")) {
+                localStorage.removeItem('ontime_trx_mofa_v1');
+                localStorage.removeItem('ontime_ref_mofa_v1');
+                loadState();
+                switchTab(activeTab);
+            }
+        }
+
+        // Role Switcher Controller with Permission Enforcement
+        function switchRole(roleName) {
+            currentRole = roleName;
+            const badge = document.getElementById('roleBadge');
+            badge.innerHTML = `<i class="fa-solid fa-user-shield"></i> ${roleName} Mode`;
+
+            const newOrderBtn = document.getElementById('headerNewOrderBtn');
+            if (newOrderBtn) {
+                newOrderBtn.style.display = (roleName === 'Auditor Checker') ? 'none' : 'flex';
+            }
+
+            // Auditor Checker Restrictions: Switch to 'all-transactions' and hide sidebar links
+            if (roleName === 'Auditor Checker') {
+                document.querySelectorAll('.hide-for-auditor').forEach(el => el.style.display = 'none');
+                switchTab('all-transactions');
+                return;
+            } else {
+                document.querySelectorAll('.hide-for-auditor').forEach(el => el.style.display = 'flex');
+            }
+
+            // Guard active tab transitions per role
+            if (roleName === 'Application Officer' && (activeTab === 'receive-order' || activeTab === 'customer-status')) {
+                switchTab('control-panel');
+            } else if (roleName === 'Receptionist' && (activeTab === 'serving-list' || activeTab === 'my-assigned-orders')) {
+                switchTab('control-panel');
+            }
+
+            switchTab(activeTab);
+        }
+
+        // Sidebar Navigation Switcher
+        function switchTab(tabId) {
+            if (currentRole === 'Auditor Checker' && tabId !== 'all-transactions') {
+                alert("Auditor / Checker role has access strictly to All Transactions Registry.");
+                return;
+            }
+
+            if (currentRole === 'Application Officer' && (tabId === 'receive-order' || tabId === 'customer-status')) {
+                alert("Application Officers do not have access to this section.");
+                return;
+            }
+            if (currentRole === 'Receptionist' && (tabId === 'serving-list' || tabId === 'my-assigned-orders')) {
+                alert("Receptionists do not have access to Application Officer queues.");
+                return;
+            }
+
+            activeTab = tabId;
+
+            // Update nav active classes
+            document.querySelectorAll('#sidebar-nav .nav-item').forEach(el => {
+                const isTarget = el.getAttribute('data-tab') === tabId;
+                if (isTarget) {
+                    el.className = "nav-item flex items-center gap-3 px-3 py-2.5 rounded-md bg-[#1a3459] text-white shadow-sm transition";
+                } else {
+                    el.className = "nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-slate-200 hover:bg-[#1a3459]/60 hover:text-white transition";
+                }
+            });
+
+            // Role-based visibility
+            document.querySelectorAll('.role-officer').forEach(el => {
+                el.style.display = (currentRole === 'Receptionist' || currentRole === 'Auditor Checker') ? 'none' : 'flex';
+            });
+            document.querySelectorAll('.role-officer-only').forEach(el => {
+                el.style.display = (currentRole === 'Application Officer') ? 'flex' : 'none';
+            });
+            document.querySelectorAll('.role-reception').forEach(el => {
+                el.style.display = (currentRole === 'Application Officer' || currentRole === 'Auditor Checker') ? 'none' : 'flex';
+            });
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) target.classList.add('active');
+
+            const titles = {
+                'control-panel': { title: 'Control Panel', desc: 'Record and follow up on customer documents until result and delivery or retrieval' },
+                'receive-order': { title: 'Receive an Order', desc: 'Reception intake form to log new customer requests and file attachments' },
+                'serving-list': { title: 'Serving List Queue', desc: 'Application Officer queue for claiming orders or Admin assignment' },
+                'my-assigned-orders': { title: 'My Assigned Orders', desc: 'Orders assigned specifically to your officer handle' },
+                'certification-results': { title: 'Certification Results', desc: 'Upload attested certificates or log rejection choices' },
+                'customer-status': { title: 'Customer Status Follow-up', desc: 'Receptionist portal to track contact notifications and document hand-overs' },
+                'refund-workflow': { title: 'Qashio Refund Workflow Tracker', desc: 'Track multi-level approval stages for financial refunds' },
+                'all-transactions': { title: 'All Transactions Registry', desc: 'Complete searchable directory showing live status across all stages' },
+                'admin-analytics': { title: 'Analytics & Visualizations', desc: 'Executive chart breakdown of operational metrics and performance' }
+            };
+
+            if (titles[tabId]) {
+                document.getElementById('view-title').innerText = titles[tabId].title;
+                document.getElementById('view-desc').innerText = titles[tabId].desc;
+            }
+
+            if (tabId === 'control-panel') renderDashboard();
+            if (tabId === 'serving-list') renderServingQueue();
+            if (tabId === 'my-assigned-orders') renderMyAssignedOrders();
+            if (tabId === 'certification-results') renderCertificationResults();
+            if (tabId === 'customer-status') renderCustomerStatus();
+            if (tabId === 'refund-workflow') renderRefundWorkflow();
+            if (tabId === 'all-transactions') renderAllTransactions();
+            if (tabId === 'admin-analytics') renderAdminAnalytics();
+        }
+
+        // TAB 1: DASHBOARD CONTROL PANEL
+        function renderDashboard() {
+            const total = transactions.length;
+            const waiting = transactions.filter(t => t.status === 'Waiting').length;
+            const received = transactions.filter(t => t.status === 'Received').length;
+            const underProcess = transactions.filter(t => t.status === 'Under Process').length;
+            const completed = transactions.filter(t => t.status === 'Completed').length;
+            const rejected = transactions.filter(t => t.status === 'Rejected').length;
+            const delivered = transactions.filter(t => t.status === 'Delivered').length;
+
+            document.getElementById('kpi-rejected').innerText = rejected;
+            document.getElementById('kpi-process').innerText = underProcess;
+            document.getElementById('kpi-waiting').innerText = waiting;
+            document.getElementById('kpi-total').innerText = total;
+
+            document.getElementById('dist-waiting').innerText = waiting;
+            document.getElementById('dist-received').innerText = received;
+            document.getElementById('dist-process').innerText = underProcess;
+            document.getElementById('dist-completed').innerText = completed;
+            document.getElementById('dist-rejected').innerText = rejected;
+            document.getElementById('dist-delivered').innerText = delivered;
+
+            const followContainer = document.getElementById('followup-container');
+            const followNeeded = transactions.filter(t => t.status !== 'Delivered');
+
+            if (followNeeded.length === 0) {
+                followContainer.innerHTML = `<div class="p-8 text-center text-xs text-slate-400">There are no transactions that need to be followed up.</div>`;
+                return;
+            }
+
+            let html = `
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-400 font-semibold bg-slate-50">
+                            <th class="p-2.5">MOFA ID</th>
+                            <th class="p-2.5">Customer Name</th>
+                            <th class="p-2.5">Type</th>
+                            <th class="p-2.5">Status</th>
+                            <th class="p-2.5 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">`;
+
+            followNeeded.slice(0, 6).forEach(trx => {
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-mono font-bold text-slate-700">${trx.id}</td>
+                        <td class="p-2.5 font-medium text-slate-900">${trx.customerName}</td>
+                        <td class="p-2.5 text-slate-600">${trx.docType}</td>
+                        <td class="p-2.5">${getStatusBadge(trx.status)}</td>
+                        <td class="p-2.5 text-right">
+                            <button onclick="openActionModal('${trx.id}')" class="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold px-2.5 py-1 rounded">
+                                View / Manage
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            followContainer.innerHTML = html;
+        }
+
+        function updateBadges() {
+            const waiting = transactions.filter(t => t.status === 'Waiting').length;
+            const myAssigned = transactions.filter(t => t.officer === currentOfficerName && (t.status === 'Received' || t.status === 'Under Process')).length;
+            const certPending = transactions.filter(t => t.status === 'Received' || t.status === 'Under Process').length;
+            const activeRefunds = refunds.filter(r => r.stage !== 'Sent through card').length;
+
+            toggleBadge('badge-serving', waiting);
+            toggleBadge('badge-my-assigned', myAssigned);
+            toggleBadge('badge-cert', certPending);
+            toggleBadge('badge-refunds', activeRefunds);
+        }
+
+        function toggleBadge(id, count) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (count > 0) {
+                el.innerText = count;
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'Waiting': 'bg-amber-50 text-amber-700 border-amber-200',
+                'Received': 'bg-blue-50 text-blue-700 border-blue-200',
+                'Under Process': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                'Completed': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                'Rejected': 'bg-red-50 text-red-700 border-red-200',
+                'Delivered': 'bg-slate-100 text-slate-700 border-slate-300'
+            };
+            return `<span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded border ${map[status] || 'bg-slate-100'}">${status}</span>`;
+        }
+
+        // TAB 2: RECEIVE ORDER FORM
+        function handleNewOrderSubmit(e) {
+            e.preventDefault();
+            const newTrx = {
+                id: "MOFA-" + Math.floor(2000 + Math.random() * 8000),
+                customerName: document.getElementById('custName').value,
+                phone: document.getElementById('custPhone').value,
+                quotationNo: document.getElementById('quotationNo').value,
+                docType: document.getElementById('docType').value,
+                fee: parseFloat(document.getElementById('feeAmount').value) || 0,
+                receiptNo: document.getElementById('receiptNo').value,
+                docCopyUploaded: document.getElementById('custDocFile').files.length > 0,
+                receiptCopyUploaded: true,
+                status: "Waiting",
+                officer: "",
+                appNumber: "",
+                appDate: "",
+                rejectionReason: "",
+                attestedDocCopy: "",
+                customerInformed: false,
+                customerContactMethod: "Pending",
+                customerReceived: false,
+                rejectionPath: "",
+                dateCreated: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                history: [{ status: "Waiting", date: new Date().toISOString().replace('T', ' ').substring(0, 16), by: currentRole }]
+            };
+
+            transactions.unshift(newTrx);
+            saveStateToStorage();
+            document.getElementById('newOrderForm').reset();
+            alert(`Order ${newTrx.id} created successfully and placed in Waiting Queue.`);
+            switchTab('control-panel');
+        }
+
+        function handleNewOrderSubmitModal(e) {
+            e.preventDefault();
+            const newTrx = {
+                id: "MOFA-" + Math.floor(2000 + Math.random() * 8000),
+                customerName: document.getElementById('mCustName').value,
+                phone: document.getElementById('mCustPhone').value,
+                quotationNo: document.getElementById('mQuotationNo').value,
+                docType: document.getElementById('mDocType').value,
+                fee: parseFloat(document.getElementById('mFeeAmount').value) || 0,
+                receiptNo: document.getElementById('mReceiptNo').value,
+                docCopyUploaded: false,
+                receiptCopyUploaded: true,
+                status: "Waiting",
+                officer: "",
+                appNumber: "",
+                appDate: "",
+                rejectionReason: "",
+                attestedDocCopy: "",
+                customerInformed: false,
+                customerContactMethod: "Pending",
+                customerReceived: false,
+                rejectionPath: "",
+                dateCreated: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                history: [{ status: "Waiting", date: new Date().toISOString().replace('T', ' ').substring(0, 16), by: currentRole }]
+            };
+
+            transactions.unshift(newTrx);
+            saveStateToStorage();
+            closeModal('newOrderModal');
+            alert(`Order ${newTrx.id} registered successfully.`);
+            switchTab('control-panel');
+        }
+
+        // TAB 3: SERVING QUEUE
+        function renderServingQueue() {
+            const container = document.getElementById('serving-queue-table-container');
+            const queue = transactions.filter(t => t.status === 'Waiting' || t.status === 'Received');
+
+            if (queue.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">No transactions waiting in application queue.</p>`;
+                return;
+            }
+
+            const isAdmin = currentRole === 'Administrator';
+
+            let html = `
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-400 font-semibold bg-slate-50">
+                            <th class="p-2.5">MOFA ID</th>
+                            <th class="p-2.5">Customer</th>
+                            <th class="p-2.5">Type</th>
+                            <th class="p-2.5">Receipt & Doc Links</th>
+                            <th class="p-2.5">Assigned Officer</th>
+                            <th class="p-2.5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">`;
+
+            queue.forEach(trx => {
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-mono font-bold text-slate-700">${trx.id}</td>
+                        <td class="p-2.5">
+                            <div class="font-semibold text-slate-900">${trx.customerName}</div>
+                            <div class="text-[10px] text-slate-400">Qtn: ${trx.quotationNo} | Ph: ${trx.phone}</div>
+                        </td>
+                        <td class="p-2.5 text-slate-700">${trx.docType}</td>
+                        <td class="p-2.5">
+                            <div class="flex items-center gap-2">
+                                <button onclick="previewReceipt('${trx.id}')" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-[10px] px-2 py-0.5 rounded flex items-center gap-1 font-medium">
+                                    <i class="fa-solid fa-receipt"></i> Receipt (${trx.receiptNo})
+                                </button>
+                                ${trx.docCopyUploaded ? `
+                                    <button onclick="downloadDocument('${trx.id}')" class="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-[10px] px-2 py-0.5 rounded flex items-center gap-1 font-medium">
+                                        <i class="fa-solid fa-download"></i> Download Doc
+                                    </button>
+                                ` : `<span class="text-[10px] text-slate-400 italic">No doc uploaded</span>`}
+                            </div>
+                        </td>
+                        <td class="p-2.5 font-medium text-slate-700">${trx.officer || '<span class="text-amber-600 font-normal">Unassigned</span>'}</td>
+                        <td class="p-2.5 text-right space-x-1">
+                            ${isAdmin ? `
+                                <button onclick="openAssignOfficerModal('${trx.id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1 rounded text-xs font-medium">
+                                    <i class="fa-solid fa-user-plus mr-1"></i> Assign to Officer
+                                </button>
+                            ` : `
+                                ${trx.status === 'Waiting' ? `
+                                    <button onclick="claimOrder('${trx.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs">
+                                        Receive Application
+                                    </button>
+                                ` : `
+                                    <button onclick="openRecordAppModal('${trx.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-xs">
+                                        Log App # & Submit
+                                    </button>
+                                `}
+                            `}
+                        </td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function openAssignOfficerModal(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+
+            let officerOptionsHtml = OFFICERS_LIST.map(off => `<option value="${off}">${off}</option>`).join('');
+
+            const html = `
+                <h3 class="text-base font-bold text-slate-900 mb-2"><i class="fa-solid fa-user-plus text-purple-600 mr-1"></i> Assign Order to Application Officer</h3>
+                <p class="text-xs text-slate-500 mb-4">Select an officer to assign order ${trx.id} (${trx.customerName}).</p>
+
+                <form onsubmit="handleAssignOfficerSubmit(event, '${trx.id}')" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Select Application Officer *</label>
+                        <select id="assignOfficerSelect" required class="w-full p-2 border border-slate-300 rounded font-medium text-slate-800">
+                            ${officerOptionsHtml}
+                        </select>
+                    </div>
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('actionModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-1.5 bg-purple-600 text-white rounded font-medium hover:bg-purple-700">Assign Order</button>
+                    </div>
+                </form>`;
+
+            document.getElementById('modal-action-content').innerHTML = html;
+            openModal('actionModal');
+        }
+
+        function handleAssignOfficerSubmit(e, id) {
+            e.preventDefault();
+            const trx = transactions.find(t => t.id === id);
+            const chosenOfficer = document.getElementById('assignOfficerSelect').value;
+
+            if (trx) {
+                trx.status = 'Received';
+                trx.officer = chosenOfficer;
+                trx.history.push({
+                    status: 'Received',
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                    by: `Administrator (Assigned to ${chosenOfficer})`
+                });
+                saveStateToStorage();
+                closeModal('actionModal');
+                renderServingQueue();
+                alert(`Order ${trx.id} assigned successfully to Application Officer ${chosenOfficer}.`);
+            }
+        }
+
+        // TAB 3B: MY ASSIGNED ORDERS (Officer only)
+        function renderMyAssignedOrders() {
+            const container = document.getElementById('my-assigned-table-container');
+            const myOrders = transactions.filter(t => t.officer === currentOfficerName);
+
+            if (myOrders.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">No orders currently assigned to ${currentOfficerName}.</p>`;
+                return;
+            }
+
+            let html = `
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-400 font-semibold bg-slate-50">
+                            <th class="p-2.5">MOFA ID</th>
+                            <th class="p-2.5">Customer Name</th>
+                            <th class="p-2.5">Document Type</th>
+                            <th class="p-2.5">Gov App #</th>
+                            <th class="p-2.5">Status</th>
+                            <th class="p-2.5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">`;
+
+            myOrders.forEach(trx => {
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-mono font-bold text-slate-700">${trx.id}</td>
+                        <td class="p-2.5 font-semibold text-slate-900">${trx.customerName}</td>
+                        <td class="p-2.5 text-slate-700">${trx.docType}</td>
+                        <td class="p-2.5 font-mono text-indigo-600">${trx.appNumber || 'Pending Log'}</td>
+                        <td class="p-2.5">${getStatusBadge(trx.status)}</td>
+                        <td class="p-2.5 text-right space-x-1">
+                            ${trx.status === 'Received' ? `
+                                <button onclick="openRecordAppModal('${trx.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-xs">
+                                    Log App # & Submit
+                                </button>
+                            ` : `
+                                <button onclick="openActionModal('${trx.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs">
+                                    View Details
+                                </button>
+                            `}
+                        </td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function previewReceipt(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+            alert(`Receipt Preview:\nReceipt Number: ${trx.receiptNo}\nQuotation No: ${trx.quotationNo}\nCustomer: ${trx.customerName}\nFee Paid: AED ${trx.fee}\nStatus: Verified & Paid`);
+        }
+
+        function downloadDocument(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+            alert(`Downloading customer document for transaction ${trx.id} (${trx.customerName})...`);
+        }
+
+        function claimOrder(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (trx) {
+                trx.status = 'Received';
+                trx.officer = currentOfficerName;
+                trx.history.push({
+                    status: 'Received',
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                    by: `Application Officer (${currentOfficerName})`
+                });
+                saveStateToStorage();
+                renderServingQueue();
+            }
+        }
+
+        function openRecordAppModal(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+
+            const html = `
+                <h3 class="text-base font-bold text-slate-900 mb-2">Record Government Submission Details</h3>
+                <p class="text-xs text-slate-500 mb-4">Transaction ${trx.id} — Customer: ${trx.customerName}</p>
+
+                <form onsubmit="handleAppRecordSubmit(event, '${trx.id}')" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Official Government Application Number *</label>
+                        <input type="text" id="appNoInput" required placeholder="e.g. MOJ-99882-2026" value="${trx.appNumber || ''}" class="w-full p-2 border border-slate-300 rounded font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Submission Date *</label>
+                        <input type="date" id="appDateInput" required value="${trx.appDate || new Date().toISOString().substring(0,10)}" class="w-full p-2 border border-slate-300 rounded">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Upload Additional / Missing File (Optional)</label>
+                        <input type="file" id="officerDocUpload" class="w-full p-1 border border-slate-300 rounded">
+                    </div>
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('actionModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-1.5 bg-indigo-600 text-white rounded font-medium">Advance to Certification Process</button>
+                    </div>
+                </form>`;
+
+            document.getElementById('modal-action-content').innerHTML = html;
+            openModal('actionModal');
+        }
+
+        function handleAppRecordSubmit(e, id) {
+            e.preventDefault();
+            const trx = transactions.find(t => t.id === id);
+            if (trx) {
+                trx.appNumber = document.getElementById('appNoInput').value;
+                trx.appDate = document.getElementById('appDateInput').value;
+                if (document.getElementById('officerDocUpload').files.length > 0) {
+                    trx.docCopyUploaded = true;
+                }
+                trx.status = 'Under Process';
+                trx.history.push({
+                    status: 'Under Process',
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                    by: `${currentRole} (App #${trx.appNumber})`
+                });
+                saveStateToStorage();
+                closeModal('actionModal');
+                switchTab('certification-results');
+            }
+        }
+
+        // TAB 4: CERTIFICATION RESULTS
+        function renderCertificationResults() {
+            const container = document.getElementById('cert-results-table-container');
+            const list = transactions.filter(t => t.status === 'Under Process' || t.status === 'Completed' || t.status === 'Rejected');
+
+            if (list.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">No cases currently in certification processing.</p>`;
+                return;
+            }
+
+            const isReceptionist = currentRole === 'Receptionist';
+
+            let html = `
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-400 font-semibold bg-slate-50">
+                            <th class="p-2.5">MOFA ID / Gov App #</th>
+                            <th class="p-2.5">Customer Name</th>
+                            <th class="p-2.5">Type</th>
+                            <th class="p-2.5">Status</th>
+                            <th class="p-2.5 text-right">Certification Decisions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">`;
+
+            list.forEach(trx => {
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5">
+                            <div class="font-mono font-bold text-slate-700">${trx.id}</div>
+                            <div class="text-[10px] text-indigo-600 font-mono">${trx.appNumber || 'No App #'}</div>
+                        </td>
+                        <td class="p-2.5 font-semibold text-slate-900">${trx.customerName}</td>
+                        <td class="p-2.5 text-slate-600">${trx.docType}</td>
+                        <td class="p-2.5">${getStatusBadge(trx.status)}</td>
+                        <td class="p-2.5 text-right space-x-1">
+                            ${isReceptionist ? `
+                                <span class="text-[11px] text-slate-400 italic">Read-only (Receptionist role)</span>
+                                <button onclick="openActionModal('${trx.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs font-medium ml-2">
+                                    View
+                                </button>
+                            ` : `
+                                ${trx.status === 'Under Process' ? `
+                                    <button onclick="openCertCompleteModal('${trx.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs">
+                                        <i class="fa-solid fa-check mr-1"></i> Complete & Upload Attested
+                                    </button>
+                                    <button onclick="openCertRejectModal('${trx.id}')" class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded text-xs">
+                                        <i class="fa-solid fa-xmark mr-1"></i> Reject Case
+                                    </button>
+                                ` : `
+                                    <button onclick="openActionModal('${trx.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs font-medium">
+                                        Inspect Result
+                                    </button>
+                                `}
+                            `}
+                        </td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function openCertCompleteModal(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+
+            const html = `
+                <h3 class="text-base font-bold text-emerald-800 mb-2">Upload Attested Document Version</h3>
+                <p class="text-xs text-slate-500 mb-4">Finalize transaction ${trx.id} for customer ${trx.customerName}.</p>
+
+                <form onsubmit="handleCertCompleteSubmit(event, '${trx.id}')" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Attested Certificate Document *</label>
+                        <input type="file" required class="w-full p-1 border border-slate-300 rounded">
+                    </div>
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('actionModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-1.5 bg-emerald-600 text-white rounded font-medium">Mark Certified & Complete</button>
+                    </div>
+                </form>`;
+
+            document.getElementById('modal-action-content').innerHTML = html;
+            openModal('actionModal');
+        }
+
+        function handleCertCompleteSubmit(e, id) {
+            e.preventDefault();
+            const trx = transactions.find(t => t.id === id);
+            if (trx) {
+                trx.status = 'Completed';
+                trx.attestedDocCopy = `ATTESTED_${trx.id}.pdf`;
+                trx.history.push({
+                    status: 'Completed',
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                    by: `${currentRole}`
+                });
+                saveStateToStorage();
+                closeModal('actionModal');
+                switchTab('customer-status');
+            }
+        }
+
+        function openCertRejectModal(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+
+            const html = `
+                <h3 class="text-base font-bold text-red-800 mb-2">Record Rejection & Workflow Branch</h3>
+                <p class="text-xs text-slate-500 mb-4">Mark application ${trx.id} as rejected and select next path.</p>
+
+                <form onsubmit="handleCertRejectSubmit(event, '${trx.id}')" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Reason for Rejection *</label>
+                        <textarea id="rejectReasonInput" required rows="3" placeholder="Provide detailed rejection notes..." class="w-full p-2 border border-slate-300 rounded"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Follow-up Action Branch *</label>
+                        <select id="rejectionPathInput" required class="w-full p-2 border border-slate-300 rounded">
+                            <option value="Refund">Initiate Qashio Refund Workflow</option>
+                            <option value="Resubmission">Queue for Customer Resubmission</option>
+                        </select>
+                    </div>
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('actionModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-1.5 bg-red-600 text-white rounded font-medium">Confirm Rejection</button>
+                    </div>
+                </form>`;
+
+            document.getElementById('modal-action-content').innerHTML = html;
+            openModal('actionModal');
+        }
+
+        function handleCertRejectSubmit(e, id) {
+            e.preventDefault();
+            const trx = transactions.find(t => t.id === id);
+            if (trx) {
+                trx.status = 'Rejected';
+                trx.rejectionReason = document.getElementById('rejectReasonInput').value;
+                trx.rejectionPath = document.getElementById('rejectionPathInput').value;
+
+                trx.history.push({
+                    status: 'Rejected',
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                    by: `${currentRole} (${trx.rejectionPath})`
+                });
+
+                if (trx.rejectionPath === 'Refund') {
+                    refunds.unshift({
+                        id: "REF-" + Math.floor(100 + Math.random() * 900),
+                        transId: trx.id,
+                        customerName: trx.customerName,
+                        invoiceTotal: trx.fee,
+                        amount: trx.fee,
+                        qashioRef: "QSH-REF-" + Math.floor(1000 + Math.random() * 9000),
+                        reason: trx.rejectionReason,
+                        stage: "Waiting for 3rd party refund",
+                        dateInitiated: new Date().toISOString().replace('T', ' ').substring(0, 16)
+                    });
+                }
+
+                saveStateToStorage();
+                closeModal('actionModal');
+                renderCertificationResults();
+            }
+        }
+
+        // TAB 5: CUSTOMER STATUS FOLLOW-UP
+        function renderCustomerStatus() {
+            const container = document.getElementById('customer-status-table-container');
+            const list = transactions.filter(t => t.status === 'Completed' || t.status === 'Rejected' || t.status === 'Delivered');
+
+            if (list.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">No completed or rejected cases requiring customer contact.</p>`;
+                return;
+            }
+
+            let html = `
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-400 font-semibold bg-slate-50">
+                            <th class="p-2.5">MOFA ID</th>
+                            <th class="p-2.5">Customer Info</th>
+                            <th class="p-2.5">Result Status</th>
+                            <th class="p-2.5">Informed Status</th>
+                            <th class="p-2.5">Handover Status</th>
+                            <th class="p-2.5 text-right">Update Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">`;
+
+            list.forEach(trx => {
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-mono font-bold text-slate-700">${trx.id}</td>
+                        <td class="p-2.5">
+                            <div class="font-semibold text-slate-900">${trx.customerName}</div>
+                            <div class="text-[10px] text-slate-400">${trx.phone}</div>
+                        </td>
+                        <td class="p-2.5">${getStatusBadge(trx.status)}</td>
+                        <td class="p-2.5">
+                            ${trx.customerInformed ? `
+                                <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-semibold text-[10px]">
+                                    <i class="fa-solid fa-check mr-1"></i> Informed (${trx.customerContactMethod})
+                                </span>
+                            ` : `
+                                <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded font-semibold text-[10px]">
+                                    Not Informed
+                                </span>
+                            `}
+                        </td>
+                        <td class="p-2.5">
+                            ${trx.customerReceived ? `
+                                <span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded font-semibold text-[10px]">
+                                    Received / Handed Over
+                                </span>
+                            ` : `
+                                <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">Pending Handover</span>
+                            `}
+                        </td>
+                        <td class="p-2.5 text-right space-x-1">
+                            <button onclick="openUpdateCustomerStatusModal('${trx.id}')" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-xs">
+                                Update Customer Status
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function openUpdateCustomerStatusModal(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+
+            const html = `
+                <h3 class="text-base font-bold text-slate-900 mb-2">Update Customer Communication & Handover Status</h3>
+                <p class="text-xs text-slate-500 mb-4">Transaction ${trx.id} — Customer: ${trx.customerName}</p>
+
+                <form onsubmit="handleCustomerStatusSubmit(event, '${trx.id}')" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Customer Informed? *</label>
+                        <select id="informedSelect" class="w-full p-2 border border-slate-300 rounded">
+                            <option value="true" ${trx.customerInformed ? 'selected' : ''}>Yes - Customer Informed</option>
+                            <option value="false" ${!trx.customerInformed ? 'selected' : ''}>No - Customer Not Contacted Yet</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Contact Method</label>
+                        <select id="contactMethodSelect" class="w-full p-2 border border-slate-300 rounded">
+                            <option value="Phone Call" ${trx.customerContactMethod === 'Phone Call' ? 'selected' : ''}>Phone Call</option>
+                            <option value="SMS Sent" ${trx.customerContactMethod === 'SMS Sent' ? 'selected' : ''}>SMS Sent</option>
+                            <option value="Email" ${trx.customerContactMethod === 'Email' ? 'selected' : ''}>Email</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Document Delivery Status *</label>
+                        <select id="receivedSelect" class="w-full p-2 border border-slate-300 rounded">
+                            <option value="false" ${!trx.customerReceived ? 'selected' : ''}>Pending Handover</option>
+                            <option value="true" ${trx.customerReceived ? 'selected' : ''}>Received / Handed Over to Client</option>
+                        </select>
+                    </div>
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('actionModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-1.5 bg-sky-600 text-white rounded font-medium">Save Status</button>
+                    </div>
+                </form>`;
+
+            document.getElementById('modal-action-content').innerHTML = html;
+            openModal('actionModal');
+        }
+
+        function handleCustomerStatusSubmit(e, id) {
+            e.preventDefault();
+            const trx = transactions.find(t => t.id === id);
+            if (trx) {
+                trx.customerInformed = document.getElementById('informedSelect').value === 'true';
+                trx.customerContactMethod = document.getElementById('contactMethodSelect').value;
+                const wasReceived = trx.customerReceived;
+                trx.customerReceived = document.getElementById('receivedSelect').value === 'true';
+
+                if (trx.customerReceived && !wasReceived) {
+                    trx.status = 'Delivered';
+                    trx.history.push({
+                        status: 'Delivered',
+                        date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                        by: `${currentRole} (Handed Over)`
+                    });
+                }
+
+                saveStateToStorage();
+                closeModal('actionModal');
+                renderCustomerStatus();
+            }
+        }
+
+        // TAB 6: REFUND WORKFLOW ENGINE
+        function renderRefundWorkflow() {
+            const container = document.getElementById('refund-workflow-table-container');
+
+            if (refunds.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center">No refund requests in system.</p>`;
+                return;
+            }
+
+            const isAuditor = currentRole === 'Auditor Checker';
+
+            let html = `
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-400 font-semibold bg-slate-50">
+                            <th class="p-2.5">Refund ID</th>
+                            <th class="p-2.5">Invoice Number</th>
+                            <th class="p-2.5">Qashio Ref #</th>
+                            <th class="p-2.5">Customer</th>
+                            <th class="p-2.5">Invoice Total</th>
+                            <th class="p-2.5">Refund Amount</th>
+                            <th class="p-2.5">Current Stage</th>
+                            <th class="p-2.5 text-right">Controls</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">`;
+
+            refunds.forEach(ref => {
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-mono font-bold text-slate-700">${ref.id}</td>
+                        <td class="p-2.5 font-mono text-blue-600">${ref.transId}</td>
+                        <td class="p-2.5 font-mono text-indigo-600">${ref.qashioRef || 'N/A'}</td>
+                        <td class="p-2.5 font-medium text-slate-900">${ref.customerName}</td>
+                        <td class="p-2.5 font-semibold text-slate-700">AED ${ref.invoiceTotal || ref.amount}</td>
+                        <td class="p-2.5 font-bold text-red-600">AED ${ref.amount}</td>
+                        <td class="p-2.5">
+                            <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded ${getRefundStageStyle(ref.stage)}">
+                                ${ref.stage}
+                            </span>
+                        </td>
+                        <td class="p-2.5 text-right">
+                            ${isAuditor ? `<span class="text-[10px] text-slate-400">Read-Only</span>` : `
+                                <button onclick="openAdvanceRefundModal('${ref.id}')" class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 rounded text-xs font-medium">
+                                    Advance Stage
+                                </button>
+                            `}
+                        </td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function getRefundStageStyle(stage) {
+            const map = {
+                'Waiting for 3rd party refund': 'bg-amber-100 text-amber-800 border border-amber-200',
+                'At management approval (level 1)': 'bg-blue-100 text-blue-800 border border-blue-200',
+                'At finance approval (level 2)': 'bg-purple-100 text-purple-800 border border-purple-200',
+                'Approved not collected': 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+                'Sent through card': 'bg-slate-800 text-white border border-slate-900'
+            };
+            return map[stage] || 'bg-slate-100';
+        }
+
+        function openRefundModal() {
+            const select = document.getElementById('refundTransId');
+            const eligibleTrx = transactions.filter(t => t.status === 'Rejected' || t.status === 'Waiting');
+
+            if (eligibleTrx.length === 0) {
+                alert("No eligible transactions with 'Rejected' or 'Waiting' status available for refund.");
+                return;
+            }
+
+            select.innerHTML = `<option value="">Select Transaction (Rejected / Waiting)...</option>`;
+            eligibleTrx.forEach(t => {
+                select.innerHTML += `<option value="${t.id}">${t.id} - ${t.customerName} (${t.status} - AED ${t.fee})</option>`;
+            });
+
+            document.getElementById('refundInvoiceTotal').value = '';
+            document.getElementById('refundAmount').value = '';
+            document.getElementById('qashioRefNo').value = 'QSH-REF-' + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('refundReason').value = '';
+
+            openModal('refundModal');
+        }
+
+        function autoFillRefund(transId) {
+            const trx = transactions.find(t => t.id === transId);
+            if (trx) {
+                document.getElementById('refundInvoiceTotal').value = trx.fee;
+                document.getElementById('refundAmount').value = trx.fee;
+                document.getElementById('refundReason').value = trx.rejectionReason || 'Customer requested refund.';
+            }
+        }
+
+        function handleRefundSubmit(e) {
+            e.preventDefault();
+            const transId = document.getElementById('refundTransId').value;
+            const trx = transactions.find(t => t.id === transId);
+
+            const newRef = {
+                id: "REF-" + Math.floor(100 + Math.random() * 900),
+                transId: transId,
+                customerName: trx ? trx.customerName : 'N/A',
+                invoiceTotal: trx ? trx.fee : 0,
+                amount: parseFloat(document.getElementById('refundAmount').value) || 0,
+                qashioRef: document.getElementById('qashioRefNo').value,
+                reason: document.getElementById('refundReason').value,
+                stage: "Waiting for 3rd party refund",
+                dateInitiated: new Date().toISOString().replace('T', ' ').substring(0, 16)
+            };
+
+            refunds.unshift(newRef);
+            saveStateToStorage();
+            closeModal('refundModal');
+            renderRefundWorkflow();
+            alert(`Qashio Refund request ${newRef.id} created successfully at Stage 1.`);
+        }
+
+        function openAdvanceRefundModal(refId) {
+            const ref = refunds.find(r => r.id === refId);
+            if (!ref) return;
+
+            const stages = [
+                "Waiting for 3rd party refund",
+                "At management approval (level 1)",
+                "At finance approval (level 2)",
+                "Approved not collected",
+                "Sent through card"
+            ];
+
+            let optionsHtml = '';
+            stages.forEach(s => {
+                optionsHtml += `<option value="${s}" ${ref.stage === s ? 'selected' : ''}>${s}</option>`;
+            });
+
+            const html = `
+                <h3 class="text-base font-bold text-slate-900 mb-2">Advance Qashio Refund Process Stage</h3>
+                <p class="text-xs text-slate-500 mb-4">Refund ${ref.id} (Qashio Ref: ${ref.qashioRef}) — Customer: ${ref.customerName} (AED ${ref.amount})</p>
+
+                <form onsubmit="handleAdvanceRefundSubmit(event, '${ref.id}')" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Select Refund Stage *</label>
+                        <select id="stageSelect" class="w-full p-2 border border-slate-300 rounded font-semibold">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Refund Reason Note</label>
+                        <textarea disabled rows="2" class="w-full p-2 border border-slate-200 bg-slate-50 rounded text-slate-500">${ref.reason}</textarea>
+                    </div>
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('actionModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-1.5 bg-red-600 text-white rounded font-medium">Update Refund Stage</button>
+                    </div>
+                </form>`;
+
+            document.getElementById('modal-action-content').innerHTML = html;
+            openModal('actionModal');
+        }
+
+        function handleAdvanceRefundSubmit(e, refId) {
+            e.preventDefault();
+            const ref = refunds.find(r => r.id === refId);
+            if (ref) {
+                ref.stage = document.getElementById('stageSelect').value;
+                saveStateToStorage();
+                closeModal('actionModal');
+                renderRefundWorkflow();
+            }
+        }
+
+        // TAB 7: ALL TRANSACTIONS (Auditor view available here)
+        function renderAllTransactions() {
+            const container = document.getElementById('all-transactions-table-container');
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filter = document.getElementById('statusFilter').value;
+
+            let filtered = transactions.filter(t => {
+                const matchesQuery = t.customerName.toLowerCase().includes(query) ||
+                                     t.id.toLowerCase().includes(query) ||
+                                     t.receiptNo.toLowerCase().includes(query);
+                const matchesStatus = filter === 'ALL' || t.status === filter;
+                return matchesQuery && matchesStatus;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-8 text-center">No transactions found matching criteria.</p>`;
+                return;
+            }
+
+            const isReceptionist = currentRole === 'Receptionist';
+            const isAuditor = currentRole === 'Auditor Checker';
+
+            let html = `
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-400 font-semibold bg-slate-50">
+                            <th class="p-2.5">MOFA ID / Date</th>
+                            <th class="p-2.5">Customer Information</th>
+                            <th class="p-2.5">Type</th>
+                            <th class="p-2.5">Receipt / Fee</th>
+                            <th class="p-2.5">Status</th>
+                            <th class="p-2.5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">`;
+
+            filtered.forEach(trx => {
+                const canUploadDoc = isReceptionist && trx.status === 'Waiting' && !trx.docCopyUploaded;
+                const canRequestRefund = isReceptionist && (trx.status === 'Waiting' || trx.status === 'Received');
+
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5">
+                            <div class="font-mono font-bold text-slate-700">${trx.id}</div>
+                            <div class="text-[10px] text-slate-400">${trx.dateCreated}</div>
+                        </td>
+                        <td class="p-2.5">
+                            <div class="font-semibold text-slate-900">${trx.customerName}</div>
+                            <div class="text-[10px] text-slate-400">Qtn: ${trx.quotationNo} | Ph: ${trx.phone}</div>
+                        </td>
+                        <td class="p-2.5 text-slate-700">${trx.docType}</td>
+                        <td class="p-2.5">
+                            <div class="font-bold text-slate-800">AED ${trx.fee}</div>
+                            <div class="text-[10px] font-mono text-slate-400">${trx.receiptNo}</div>
+                        </td>
+                        <td class="p-2.5">${getStatusBadge(trx.status)}</td>
+                        <td class="p-2.5 text-right space-x-1">
+                            <button onclick="openActionModal('${trx.id}')" class="text-xs text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1 rounded">
+                                View History
+                            </button>
+                            ${!isAuditor && canUploadDoc ? `
+                                <button onclick="openUploadDocModal('${trx.id}')" class="text-xs bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded font-medium">
+                                    <i class="fa-solid fa-upload"></i> Add Doc Scan
+                                </button>
+                            ` : ''}
+                            ${!isAuditor && canRequestRefund ? `
+                                <button onclick="receptionRefundAction('${trx.id}')" class="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded font-medium">
+                                    Start Refund / Pull
+                                </button>
+                            ` : ''}
+                            ${currentRole === 'Administrator' ? `
+                                <button onclick="openAdminEditModal('${trx.id}')" class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded font-medium">
+                                    <i class="fa-solid fa-pen-to-square"></i> Admin Edit
+                                </button>
+                            ` : ''}
+                        </td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function openUploadDocModal(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+
+            const html = `
+                <h3 class="text-base font-bold text-slate-900 mb-2">Upload Original Document Copy / Scan</h3>
+                <p class="text-xs text-slate-500 mb-4">Transaction ${trx.id} — Customer: ${trx.customerName}</p>
+
+                <form onsubmit="handleUploadDocSubmit(event, '${trx.id}')" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Select Document File *</label>
+                        <input type="file" required class="w-full p-1 border border-slate-300 rounded">
+                    </div>
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('actionModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-1.5 bg-blue-600 text-white rounded font-medium">Upload & Attach</button>
+                    </div>
+                </form>`;
+
+            document.getElementById('modal-action-content').innerHTML = html;
+            openModal('actionModal');
+        }
+
+        function handleUploadDocSubmit(e, id) {
+            e.preventDefault();
+            const trx = transactions.find(t => t.id === id);
+            if (trx) {
+                trx.docCopyUploaded = true;
+                trx.history.push({
+                    status: trx.status,
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                    by: "Receptionist (Uploaded Original Doc)"
+                });
+                saveStateToStorage();
+                closeModal('actionModal');
+                renderAllTransactions();
+                alert(`Original document attached successfully to transaction ${trx.id}.`);
+            }
+        }
+
+        function receptionRefundAction(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+            if (confirm(`Remove transaction ${trx.id} from queue and initiate refund workflow?`)) {
+                trx.status = 'Rejected';
+                trx.rejectionReason = 'Withdrawn by reception for refund/cancellation.';
+                trx.history.push({
+                    status: 'Rejected',
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                    by: 'Receptionist (Withdrawn for Refund)'
+                });
+
+                refunds.unshift({
+                    id: "REF-" + Math.floor(100 + Math.random() * 900),
+                    transId: trx.id,
+                    customerName: trx.customerName,
+                    invoiceTotal: trx.fee,
+                    amount: trx.fee,
+                    qashioRef: "QSH-REF-" + Math.floor(1000 + Math.random() * 9000),
+                    reason: "Receptionist refund request from queue.",
+                    stage: "Waiting for 3rd party refund",
+                    dateInitiated: new Date().toISOString().replace('T', ' ').substring(0, 16)
+                });
+
+                saveStateToStorage();
+                switchTab('refund-workflow');
+            }
+        }
+
+        function openAdminEditModal(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+
+            const html = `
+                <h3 class="text-base font-bold text-purple-900 mb-2"><i class="fa-solid fa-pen-to-square mr-1"></i> Admin Universal Edit</h3>
+                <p class="text-xs text-slate-500 mb-4">Edit details for transaction ${trx.id} at any workflow stage.</p>
+
+                <form onsubmit="handleAdminEditSubmit(event, '${trx.id}')" class="space-y-3 text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Customer Name</label>
+                            <input type="text" id="editCustName" value="${trx.customerName}" class="w-full p-2 border border-slate-300 rounded">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Phone</label>
+                            <input type="text" id="editPhone" value="${trx.phone}" class="w-full p-2 border border-slate-300 rounded">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Service Category</label>
+                            <select id="editDocType" class="w-full p-2 border border-slate-300 rounded">
+                                <option value="Normal" ${trx.docType === 'Normal' ? 'selected' : ''}>Normal</option>
+                                <option value="Commercial" ${trx.docType === 'Commercial' ? 'selected' : ''}>Commercial</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Fee Paid (AED)</label>
+                            <input type="number" id="editFee" value="${trx.fee}" class="w-full p-2 border border-slate-300 rounded">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Workflow Status</label>
+                            <select id="editStatus" class="w-full p-2 border border-slate-300 rounded font-bold">
+                                <option value="Waiting" ${trx.status === 'Waiting' ? 'selected' : ''}>Waiting</option>
+                                <option value="Received" ${trx.status === 'Received' ? 'selected' : ''}>Received</option>
+                                <option value="Under Process" ${trx.status === 'Under Process' ? 'selected' : ''}>Under Process</option>
+                                <option value="Completed" ${trx.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                                <option value="Rejected" ${trx.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                                <option value="Delivered" ${trx.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Gov Application #</label>
+                            <input type="text" id="editAppNo" value="${trx.appNumber || ''}" class="w-full p-2 border border-slate-300 rounded font-mono">
+                        </div>
+                    </div>
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeModal('actionModal')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded">Cancel</button>
+                        <button type="submit" class="px-4 py-1.5 bg-purple-700 text-white rounded font-medium">Save Changes</button>
+                    </div>
+                </form>`;
+
+            document.getElementById('modal-action-content').innerHTML = html;
+            openModal('actionModal');
+        }
+
+        function handleAdminEditSubmit(e, id) {
+            e.preventDefault();
+            const trx = transactions.find(t => t.id === id);
+            if (trx) {
+                trx.customerName = document.getElementById('editCustName').value;
+                trx.phone = document.getElementById('editPhone').value;
+                trx.docType = document.getElementById('editDocType').value;
+                trx.fee = parseFloat(document.getElementById('editFee').value) || 0;
+                trx.status = document.getElementById('editStatus').value;
+                trx.appNumber = document.getElementById('editAppNo').value;
+
+                trx.history.push({
+                    status: trx.status,
+                    date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                    by: "Administrator (Manual Override)"
+                });
+
+                saveStateToStorage();
+                closeModal('actionModal');
+                renderAllTransactions();
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = 'ALL';
+            renderAllTransactions();
+        }
+
+        function filterAndNavigate(status) {
+            switchTab('all-transactions');
+            document.getElementById('statusFilter').value = status;
+            renderAllTransactions();
+        }
+
+        // TAB 8: ADMIN ANALYTICS & CHARTS
+        function renderAdminAnalytics() {
+            Object.keys(chartsInstance).forEach(k => {
+                if (chartsInstance[k]) chartsInstance[k].destroy();
+            });
+
+            const ctx1 = document.getElementById('chartDistribution').getContext('2d');
+            chartsInstance.dist = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Waiting', 'Received', 'Under Process', 'Completed', 'Rejected', 'Delivered'],
+                    datasets: [{
+                        data: [
+                            transactions.filter(t => t.status === 'Waiting').length,
+                            transactions.filter(t => t.status === 'Received').length,
+                            transactions.filter(t => t.status === 'Under Process').length,
+                            transactions.filter(t => t.status === 'Completed').length,
+                            transactions.filter(t => t.status === 'Rejected').length,
+                            transactions.filter(t => t.status === 'Delivered').length
+                        ],
+                        backgroundColor: ['#f59e0b', '#3b82f6', '#6366f1', '#10b981', '#ef4444', '#64748b']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx2 = document.getElementById('chartApproval').getContext('2d');
+            chartsInstance.app = new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: ['Completed / Delivered', 'Rejected'],
+                    datasets: [{
+                        data: [
+                            transactions.filter(t => t.status === 'Completed' || t.status === 'Delivered').length,
+                            transactions.filter(t => t.status === 'Rejected').length
+                        ],
+                        backgroundColor: ['#10b981', '#ef4444']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx3 = document.getElementById('chartRefunds').getContext('2d');
+            const stages = [
+                "Waiting for 3rd party refund",
+                "At management approval (level 1)",
+                "At finance approval (level 2)",
+                "Approved not collected",
+                "Sent through card"
+            ];
+            chartsInstance.ref = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: ['Stage 1', 'Stage 2', 'Stage 3', 'Stage 4', 'Stage 5'],
+                    datasets: [{
+                        label: 'Refund Requests',
+                        data: stages.map(s => refunds.filter(r => r.stage === s).length),
+                        backgroundColor: '#ec4899'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+
+            const ctx4 = document.getElementById('chartRevenue').getContext('2d');
+            const categories = ['Normal', 'Commercial'];
+            const revenues = categories.map(cat => {
+                return transactions.filter(t => t.docType === cat).reduce((sum, t) => sum + t.fee, 0);
+            });
+
+            chartsInstance.rev = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: ['Normal', 'Commercial'],
+                    datasets: [{
+                        label: 'Revenue (AED)',
+                        data: revenues,
+                        backgroundColor: '#8b5cf6'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // DYNAMIC TIMELINE & ACTION MODAL
+        function openActionModal(id) {
+            const trx = transactions.find(t => t.id === id);
+            if (!trx) return;
+
+            let historyHtml = '';
+            trx.history.forEach(item => {
+                historyHtml += `
+                    <div class="relative pl-5 pb-3 border-l-2 border-slate-200 last:border-0">
+                        <div class="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-blue-600"></div>
+                        <div class="text-xs font-semibold text-slate-800">${item.status}</div>
+                        <div class="text-[10px] text-slate-400">${item.date} by ${item.by}</div>
+                    </div>`;
+            });
+
+            const html = `
+                <div class="space-y-4 text-xs">
+                    <div class="border-b border-slate-200 pb-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-mono font-bold text-base text-slate-900">${trx.id}</span>
+                                ${getStatusBadge(trx.status)}
+                            </div>
+                            <span class="text-slate-400">${trx.dateCreated}</span>
+                        </div>
+                        <h4 class="font-bold text-slate-800 text-sm mt-1">${trx.customerName} (${trx.phone})</h4>
+                        <div class="text-[11px] text-slate-500">Quotation No: ${trx.quotationNo}</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded border border-slate-200">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Document Type</span>
+                            <span class="font-medium text-slate-800">${trx.docType}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Fee & Receipt</span>
+                            <span class="font-medium text-slate-800">AED ${trx.fee} (${trx.receiptNo})</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Assigned Application Officer</span>
+                            <span class="font-medium text-slate-800 font-semibold text-purple-700">${trx.officer || 'Unassigned'}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Government Application #</span>
+                            <span class="font-medium text-slate-800 font-mono">${trx.appNumber || 'Not submitted yet'}</span>
+                        </div>
+                    </div>
+
+                    ${trx.rejectionReason ? `
+                        <div class="p-3 bg-red-50 border border-red-200 text-red-700 rounded">
+                            <span class="font-bold block">Rejection Reason:</span>
+                            ${trx.rejectionReason} (Path: ${trx.rejectionPath})
+                        </div>
+                    ` : ''}
+
+                    ${trx.attestedDocCopy ? `
+                    <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex justify-between items-center">
+                        <div>
+                            <span class="font-bold block">Attested Document Copy:</span>
+                            <span class="font-mono text-[11px] block text-emerald-600 mb-1">${trx.attestedDocCopy}</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <a href="#" onclick="alert('Downloading attested document...'); return false;" 
+                               class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded shadow transition flex items-center space-x-1">
+                               <i class="fa-solid fa-download mr-1"></i> Download
+                            </a>
+                            <i class="fa-solid fa-file-pdf text-emerald-600 text-2xl"></i>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div>
+                        <h5 class="font-bold text-slate-800 mb-2">Audit History & Life Cycle</h5>
+                        <div class="mt-2">
+                            ${historyHtml}
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 flex justify-end">
+                        <button onclick="closeModal('actionModal')" class="bg-slate-100 text-slate-700 font-medium px-4 py-1.5 rounded">
+                            Close
+                        </button>
+                    </div>
+                </div>`;
+
+            document.getElementById('modal-action-content').innerHTML = html;
+            openModal('actionModal');
+        }
+
+        // Generic Helpers
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function openNewOrderModal() { openModal('newOrderModal'); }
+    </script>
+</body>
+</html>
